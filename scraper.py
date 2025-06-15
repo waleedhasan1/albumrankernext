@@ -14,7 +14,7 @@ def scrape_albums(source_url, num_albums=100):
     """
     print(f"Scraping {num_albums} albums from {source_url}")
     
-    albums = []
+
     
     try:
         headers = {
@@ -46,30 +46,51 @@ def scrape_albums(source_url, num_albums=100):
             album_info.append(h2)
         
 
-        for i,url in enumerate(image_urls):
-            print(i,url)
-        for i,info in enumerate(album_info):
-            print(i,info)
+        #for i,url in enumerate(image_urls):
+            #print(i,url)
+        #for i,info in enumerate(album_info):
+            #print(i,info)
         #print(len(image_urls)) #need to chop off  first one
         #print(len(album_info)) #need to chop off last three
         image_urls = image_urls[1:]
         album_info = album_info[:len(album_info)-3]
-        #for i,url in enumerate(image_urls):
+       #for i,url in enumerate(image_urls):
             #print(i,url)
         #for i,info in enumerate(album_info):
             #print(i,info)
         
         #want to separate arrays into album names album authors and album years lists
         #want t make albums a list of dictionaries
-        for i in len(album_info):
+        albums =[]
+        
+        for i in range(len(album_info)):
+            #need to extract data from albym_info[i]
+            #print(type(album_info[i].text))
+            #print(album_info[i].text)
+            if album_info[i].text == "70. ‘Smash Hits by Rodgers & Hart’ (Columbia, 1939)":
+                continue
+            s = album_info[i].text
+            year_text = s[-5:-1]
+            #print(s)
+            author_title_text = s[s.find(".") + 2:s.find("(")]
+           # print(author_title_text)
+            author_text = author_title_text[:author_title_text.find(",")]
+            title_text = author_title_text[author_title_text.find(",") + 3:len(author_title_text)-2]
+           # print(author_text)
+           # print(title_text)
+            album_dict = {
+                'title' : title_text,
+                'artist' : author_text,
+                'year' : year_text,
+                'coverurl' : image_urls[i]
+            }
+            print(album_dict)
+            albums.append(album_dict)
 
-            album_dict = {}
-            #want to make this element
-            #title: author: year: source:
+            #ok got everything separated.. need to put it into data base
+            #or just return
+        
             
-        for info in album_info:
-            print(type(info))
-            print(info)
             
         return albums
         
@@ -112,17 +133,16 @@ def save_albums_to_db(albums, db_path='albums.db'):
         title TEXT NOT NULL,
         artist TEXT NOT NULL,
         cover_url TEXT NOT NULL,
-        elo_rating INTEGER NOT NULL,
-        times_rated INTEGER DEFAULT 0
+        elo_rating INTEGER DEFAULT 1200
     )
     ''')
     
     # Insert albums
     for album in albums:
         cursor.execute('''
-        INSERT INTO albums (title, artist, cover_url, elo_rating, times_rated)
-        VALUES (?, ?, ?, ?, 0)
-        ''', (album['title'], album['artist'], album['cover_url'], album['elo_rating']))
+        INSERT INTO albums (title, artist, cover_url, elo_rating)
+        VALUES (?, ?, ?, 1200)
+        ''', (album['title'], album['artist'], album['coverurl']))
     
     conn.commit()
     conn.close()
@@ -135,4 +155,4 @@ if __name__ == "__main__":
     print(len(albums))
     #for album in albums:
     #    print(album)
-    #save_albums_to_db(albums)
+    save_albums_to_db(albums)
