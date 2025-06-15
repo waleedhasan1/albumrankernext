@@ -1,25 +1,29 @@
-'use client';
-
+'use client'
 import { useState, useEffect } from 'react';
+
 
 interface Album {
   title: string;
+  artist: string;
+  cover_url: string;
+  year: string;
+  elo_rating: number;
 }
 
 export default function Home() {
-  const [titles, setTitles] = useState<string[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAlbums = async () => {
+  const fetchAlbums = async () => {
       try {
         const response = await fetch('/api/albums');
         if (!response.ok) {
           throw new Error('Failed to fetch albums');
         }
         const data = await response.json();
-        setTitles(data.titles.map((album: Album) => album.title));
+        console.log('API response:', data); // Debug line
+        setAlbums(data.albums || []); // Fallback to empty array
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -27,27 +31,51 @@ export default function Home() {
       }
     };
 
-    fetchAlbums();
+  useEffect(() => {
+     fetchAlbums();
   }, []);
 
   if (loading) return <div className="p-8">Loading albums...</div>;
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
 
   return (
-    <main className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">Album Collection</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center p-8">
+      <h1 className="text-4xl font-bold mb-12 text-center">Album Collection</h1>
       
-      {titles.length === 0 ? (
-        <p>No albums found.</p>
+      {!Array.isArray(albums) || albums.length === 0 ? (
+        <p className="text-xl">No albums found.</p>
       ) : (
-        <ul className="space-y-2">
-          {titles.map((title, index) => (
-            <li key={index} className="p-3 bg-gray-100 rounded-lg">
-              {title}
-            </li>
-          ))}
-        </ul>
+        <div className="flex flex-col items-center">
+          <div className="flex gap-12 items-center justify-center mb-8">
+            {albums.map((album, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden max-w-sm">
+                <img 
+                  src={album.cover_url} 
+                  alt={`${album.title} cover`}
+                  className="w-80 h-80 object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">{album.title}</h3>
+                  <p className="text-lg text-gray-600 mb-1">{album.artist}</p>
+                  <p className="text-md text-gray-500">{album.year}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <button 
+            onClick={fetchAlbums}
+            disabled={loading}
+            className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 text-lg"
+          >
+            {loading ? 'Loading...' : 'Show New Albums'}
+          </button>
+        </div>
       )}
-    </main>
+    </div>
   );
 }

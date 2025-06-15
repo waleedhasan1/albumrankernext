@@ -132,6 +132,7 @@ def save_albums_to_db(albums, db_path='albums.db'):
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         artist TEXT NOT NULL,
+        year TEXT NOT NULL,
         cover_url TEXT NOT NULL,
         elo_rating INTEGER DEFAULT 1200
     )
@@ -140,9 +141,9 @@ def save_albums_to_db(albums, db_path='albums.db'):
     # Insert albums
     for album in albums:
         cursor.execute('''
-        INSERT INTO albums (title, artist, cover_url, elo_rating)
-        VALUES (?, ?, ?, 1200)
-        ''', (album['title'], album['artist'], album['coverurl']))
+        INSERT INTO albums (title, artist, cover_url, year, elo_rating)
+        VALUES (?, ?, ?, ?, 1200)
+        ''', (album['title'], album['artist'], album['coverurl'], album['year']))
     
     conn.commit()
     conn.close()

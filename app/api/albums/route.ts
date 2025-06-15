@@ -11,12 +11,12 @@ export async function GET() {
     const dbClose = promisify(db.close.bind(db));
     
     // Query all titles and cover urls
-    const rows = await dbAll('SELECT title, cover_url FROM albums');
+    const rows = await dbAll('SELECT title, artist, year, cover_url, elo_rating FROM albums ORDER BY RANDOM() LIMIT 2');
     
     // Close the database connection
     await dbClose();
     
-    return NextResponse.json({ titles: rows });
+    return NextResponse.json({ albums: rows });
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(
