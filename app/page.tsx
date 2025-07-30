@@ -143,7 +143,7 @@ export default function Home() {
                     target.style.display = 'none';
                   }}
                 />
-                <div className="p-4 md:p-6">
+                <div className="p-2 md:p-4">
                   <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">{album.title}</h3>
                   <p className="text-base md:text-lg text-gray-600 mb-1">{album.artist}</p>
                   <p className="text-sm md:text-md text-gray-500 mb-2">{album.year}</p>
