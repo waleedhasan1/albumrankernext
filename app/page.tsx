@@ -1,5 +1,7 @@
 'use client'
 //import { DynamicServerError } from 'next/dist/client/components/hooks-server-context';
+
+
 import { useState, useEffect } from 'react';
 
 
@@ -14,9 +16,9 @@ interface Album {
 export default function Home() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
- // const [updating, setUpdating] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
- // const [message, setMessage] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
 
   const fetchAlbums = async () => {
       try {
@@ -36,7 +38,7 @@ export default function Home() {
         setLoading(false);
       }
     };
-    /*
+    
 
   const handleAlbumClick = async(clickedAlbum: Album) => {
     if (albums.length != 2 || updating) return;
@@ -82,7 +84,7 @@ export default function Home() {
   };
 
 
-*/
+
 
   useEffect(() => {
      fetchAlbums();
@@ -192,3 +194,5 @@ return (
     </div>
   );
 }   */
+
+  

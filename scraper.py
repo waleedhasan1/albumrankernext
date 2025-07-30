@@ -222,4 +222,4 @@ if __name__ == "__main__":
     print(len(albums))
     #for album in albums:
     #    print(album)
-    save_albums_to_db(albums)
+    save_albums_to_neon(albums)

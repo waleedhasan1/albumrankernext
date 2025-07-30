@@ -1,41 +1,48 @@
+import { neon } from '@neondatabase/serverless';
 import { NextResponse } from 'next/server';
-import sqlite3 from 'sqlite3';
-import { promisify } from 'util';
-//import Database from 'better-sqlite3';
-
-
-
 
 export async function GET() {
   try {
-    const db = new sqlite3.Database('./albums.db');
+    // Initialize Neon connection
+    const sql = neon(process.env.DATABASE_URL || '');
+
     
-    // Promisify the database methods
-    const dbAll = promisify(db.all.bind(db));
-    //const dbClose = promisify(db.close.bind(db));
+    // Query 2 random albums from Neon database
+    const albums = await sql`
+      SELECT * FROM albums 
+      ORDER BY RANDOM() 
+      LIMIT 2
+    `;
     
-    // Query all titles and cover urls
-    const rows = await dbAll('SELECT * FROM albums ORDER BY RANDOM() LIMIT 2');
+    return NextResponse.json({ albums });
     
-    // Close the database connection
-    db.close();
-    
-    return NextResponse.json({ albums: rows });
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch albums' },
       { status: 500 }
     );
-  } 
+  }
 }
 
-/*
+
 export async function POST(request: Request) {
   try {
     const { winnerTitle, loserTitle, winnerElo, loserElo } = await request.json();
     
-    db = new Database('./albums.db');
+    // Check if DATABASE_URL exists
+    const databaseUrl = process.env.DATABASE_URL;
+    
+    if (!databaseUrl) {
+      console.error('DATABASE_URL environment variable is not set');
+      return NextResponse.json(
+        { error: 'Database configuration error' },
+        { status: 500 }
+      );
+    }
+    
+    // Initialize Neon connection
+    const sql = neon(databaseUrl);
     
     // Calculate new Elo ratings
     const K = 30; // Elo constant
@@ -48,19 +55,21 @@ export async function POST(request: Request) {
     const newWinnerElo = Math.round(winnerElo + K * (1 - expectedWinner));
     const newLoserElo = Math.round(loserElo + K * (0 - expectedLoser));
     
-    // Prepare statements
-    updateWinner = db.prepare('UPDATE albums SET elo_rating = ? WHERE title = ?');
-    updateLoser = db.prepare('UPDATE albums SET elo_rating = ? WHERE title = ?');
+    // Update both albums in a single transaction-like operation
+    // Neon handles transactions automatically for multiple queries
+    await sql`
+      UPDATE albums 
+      SET elo_rating = ${newWinnerElo} 
+      WHERE title = ${winnerTitle}
+    `;
     
-    // Create and execute transaction
-    const transaction = db.transaction(() => {
-      updateWinner.run(newWinnerElo, winnerTitle);
-      updateLoser.run(newLoserElo, loserTitle);
-    });
+    await sql`
+      UPDATE albums 
+      SET elo_rating = ${newLoserElo} 
+      WHERE title = ${loserTitle}
+    `;
     
-    transaction();
-    
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       newWinnerElo,
       newLoserElo,
@@ -73,13 +82,6 @@ export async function POST(request: Request) {
       { error: 'Failed to update Elo ratings' },
       { status: 500 }
     );
-  } finally {
-    // Clean up prepared statements first (only if they were created)
-
-    // Then close database (only if it was opened)
-    if (db !== null) {
-      db.close();
-    }
   }
 }
-  */
+  
