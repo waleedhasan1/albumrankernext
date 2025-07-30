@@ -96,6 +96,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
+        <div className="absolute top-4 right-4">
+          <a 
+          href="/rankings" 
+          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+          >
+          View Rankings
+          </a>
+        </div>
       <h1 className="text-4xl font-bold mb-8 text-center">Pick the Better Album Cover</h1>
       
       {/* Show message when updating */}
