@@ -6,7 +6,8 @@ import time
 import random
 import re
 import pandas as pd
-
+import psycopg2
+from dotenv import load_dotenv
 def scrape_albums(source_url, num_albums=100):
     """
     Scrape album data from a music website
@@ -121,6 +122,67 @@ def scrape_albums(source_url, num_albums=100):
     print(f"Successfully scraped {len(albums)} albums")
     return albums
 
+def save_albums_to_neon(albums):
+    """Save scraped albums to Neon database via Vercel"""
+    load_dotenv()
+    try:
+        # Get database URL from environment variables
+        database_url = os.getenv('DATABASE_URL')
+        
+        if not database_url:
+            raise ValueError("DATABASE_URL not found in environment variables")
+        
+        # Connect to Neon database
+        conn = psycopg2.connect(database_url)
+        cursor = conn.cursor()
+        
+        # Create table if it doesn't exist (PostgreSQL syntax)
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS albums (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            artist TEXT NOT NULL,
+            year TEXT NOT NULL,
+            cover_url TEXT NOT NULL,
+            elo_rating INTEGER DEFAULT 1200,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+        
+        # Insert albums using batch insert for better performance
+        insert_query = '''
+        INSERT INTO albums (title, artist, cover_url, year, elo_rating)
+        VALUES (%s, %s, %s, %s, %s)
+        '''
+        
+        # Prepare data for batch insert
+        album_data = [
+            (album['title'], album['artist'], album['coverurl'], album['year'], 1200)
+            for album in albums
+        ]
+        
+        # Execute batch insert
+        cursor.executemany(insert_query, album_data)
+        
+        # Commit changes
+        conn.commit()
+        
+        print(f"Successfully saved {len(albums)} albums to Neon database")
+        
+    except psycopg2.Error as e:
+        print(f"Database error: {e}")
+        if conn:
+            conn.rollback()
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        # Close connections
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
 def save_albums_to_db(albums, db_path='albums.db'):
     """Save scraped albums to SQLite database"""
     conn = sqlite3.connect(db_path)
@@ -148,6 +210,10 @@ def save_albums_to_db(albums, db_path='albums.db'):
     conn.commit()
     conn.close()
     print(f"Saved {len(albums)} albums to database")
+
+
+
+
 
 if __name__ == "__main__":
     # Example usage - replace with actual URL
