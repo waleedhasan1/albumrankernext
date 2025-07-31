@@ -137,7 +137,7 @@ export default function Home() {
                 <img 
                   src={album.cover_url} 
                   alt={`${album.title} cover`}
-                  className="w-full h-64 md:h-80 object-cover"
+                  className="w-full aspect-square object-contain bg-gray-100"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
